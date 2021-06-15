@@ -1,0 +1,215 @@
+---
+title: "BlackRhino"
+author: "Tarsus Lam"
+date: "10/26/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r format_data}
+# Load data into variable
+rhinos_raw<-read.csv("~/Desktop/ESPM 108B/proj/3_BlackRhinoMsats.csv")
+# Rename column names to make it more readable
+colnames(rhinos_raw)[3]<-'DB1.1'
+colnames(rhinos_raw)[5]<-'DB23.1'
+colnames(rhinos_raw)[7]<-'DB44.1'
+colnames(rhinos_raw)[9]<-'BR4.1'
+colnames(rhinos_raw)[11]<-'BR6.1'
+colnames(rhinos_raw)[13]<-'BR17.1'
+colnames(rhinos_raw)[15]<-'SW35.1'
+colnames(rhinos_raw)[17]<-'RHI32A.1'
+colnames(rhinos_raw)[19]<-'DB14.1'
+colnames(rhinos_raw)[21]<-'B1RH2B.1'
+colnames(rhinos_raw)[23]<-'B1RH37D.1'
+# Make a dataframe to store genotype data, one column for each locus
+rhino<-data.frame(matrix(nrow = nrow(rhinos_raw), ncol = 11))
+# Fill dataframe with concatenated alleles
+rhino[1]<-as.numeric(paste(rhinos_raw$DB1, rhinos_raw$DB1.1, sep=""))
+rhino[2]<-as.numeric(paste(rhinos_raw$DB23, rhinos_raw$DB23.1, sep=""))
+rhino[3]<-as.numeric(paste(rhinos_raw$DB44, rhinos_raw$DB44.1, sep=""))
+rhino[4]<-as.numeric(paste(rhinos_raw$BR4, rhinos_raw$BR4.1, sep=""))
+rhino[5]<-as.numeric(paste(rhinos_raw$BR6, rhinos_raw$BR6.1, sep=""))
+rhino[6]<-as.numeric(paste(rhinos_raw$BR17, rhinos_raw$BR17.1, sep=""))
+rhino[7]<-as.numeric(paste(rhinos_raw$SW35, rhinos_raw$SW35.1, sep=""))
+rhino[8]<-as.numeric(paste(rhinos_raw$RHI32A, rhinos_raw$RHI32A.1, sep=""))
+rhino[9]<-as.numeric(paste(rhinos_raw$DB14, rhinos_raw$DB14.1, sep=""))
+rhino[10]<-as.numeric(paste(rhinos_raw$B1RH2B, rhinos_raw$B1RH2B.1, sep=""))
+rhino[11]<-as.numeric(paste(rhinos_raw$B1RH37D, rhinos_raw$B1RH37D.1, sep=""))
+#Remove rows with all NA's
+rhino<-rhino[rowSums(is.na(rhino)) != ncol(rhino),]
+```
+
+
+```{r PCA}
+# Load library for PCA analysis
+library(adegenet)
+# Converting dataframe to 'genind' data type
+x<-df2genind(rhino, ncode=3, NA.char = NA, ploidy = 2)
+# Quantifies number of PCA components and clusters
+grp<-find.clusters(x, max.n.clust = 20) # 200, 10
+# Plots discriminant analysis eigenvalues, represents diversity between pre-defined groups
+dapc1 <- dapc(x, grp$grp) # 10, 3
+1# Scatter plot of diversity between three clusters
+scatter(dapc1, ratio.pca=0.3, bg="white", pch=20,  cell=0,
+        cstar=0, solid=.4, cex=3, clab=0,
+        mstree=TRUE, scree.da=FALSE, posi.pca="bottomright",
+        leg=TRUE, txt.leg=paste("Cluster",1:3))
+# Bar plot to represent the group assignment probability of individuals to several groups
+compoplot(dapc1, posi="bottomright",legend = FALSE, lab="",
+          ncol=1, xlab="individuals", col=funky(5))
+```
+
+```{r F_stats}
+# Make a new dataframe to identify population for each individual
+rhino_pop<-data.frame(matrix(nrow = nrow(rhino), ncol = 12))
+# Rename and store population values into first column based on clusters determined in PCA
+colnames(rhino_pop)[1]<-"pop"
+rhino_pop[1]<-grp$grp
+# Store rest of genotype data
+rhino_pop[,2:12]<-rhino
+write.csv(rhino_pop, "~/Desktop/ESPM 108B/rhino_pop.csv")
+
+library(hierfstat)
+rhinostats<-basic.stats(rhino_pop)
+rhinostats
+```
+
+
+```{r format_extinct}
+# Load data into variable
+extinct_raw<-read.csv("~/Desktop/ESPM 108B/proj/rhino_extinct.csv")
+# Rename column names to make it more readable
+colnames(extinct_raw)[3]<-'DB1.1'
+colnames(extinct_raw)[5]<-'DB23.1'
+colnames(extinct_raw)[7]<-'DB44.1'
+colnames(extinct_raw)[9]<-'BR4.1'
+colnames(extinct_raw)[11]<-'BR6.1'
+colnames(extinct_raw)[13]<-'BR17.1'
+colnames(extinct_raw)[15]<-'SW35.1'
+colnames(extinct_raw)[17]<-'RHI32A.1'
+colnames(extinct_raw)[19]<-'DB14.1'
+colnames(extinct_raw)[21]<-'B1RH2B.1'
+colnames(extinct_raw)[23]<-'B1RH37D.1'
+# Make a dataframe to store genotype data, one column for each locus
+rhino_extinct<-data.frame(matrix(nrow = nrow(extinct_raw), ncol = 11))
+# Fill dataframe with concatenated alleles
+rhino_extinct[1]<-as.numeric(paste(extinct_raw$DB1, extinct_raw$DB1.1, sep=""))
+rhino_extinct[2]<-as.numeric(paste(extinct_raw$DB23, extinct_raw$DB23.1, sep=""))
+rhino_extinct[3]<-as.numeric(paste(extinct_raw$DB44, extinct_raw$DB44.1, sep=""))
+rhino_extinct[4]<-as.numeric(paste(extinct_raw$BR4, extinct_raw$BR4.1, sep=""))
+rhino_extinct[5]<-as.numeric(paste(extinct_raw$BR6, extinct_raw$BR6.1, sep=""))
+rhino_extinct[6]<-as.numeric(paste(extinct_raw$BR17, extinct_raw$BR17.1, sep=""))
+rhino_extinct[7]<-as.numeric(paste(extinct_raw$SW35, extinct_raw$SW35.1, sep=""))
+rhino_extinct[8]<-as.numeric(paste(extinct_raw$RHI32A, extinct_raw$RHI32A.1, sep=""))
+rhino_extinct[9]<-as.numeric(paste(extinct_raw$DB14, extinct_raw$DB14.1, sep=""))
+rhino_extinct[10]<-as.numeric(paste(extinct_raw$B1RH2B, extinct_raw$B1RH2B.1, sep=""))
+rhino_extinct[11]<-as.numeric(paste(extinct_raw$B1RH37D, extinct_raw$B1RH37D.1, sep=""))
+#Remove rows with all NA's
+rhino_extinct<-rhino_extinct[rowSums(is.na(rhino_extinct)) != ncol(rhino_extinct),]
+```
+
+
+```{r PCA_extinct}
+# Load library for PCA analysis
+library(adegenet)
+# Converting dataframe to 'genind' data type
+x_extinct<-df2genind(rhino_extinct, ncode=3, NA.char = NA, ploidy = 2)
+# Quantifies number of PCA components and clusters
+grp_extinct<-find.clusters(x_extinct, max.n.clust = 40) # 200, 10
+# Plots discriminant analysis eigenvalues, represents diversity between pre-defined groups
+dapc1_extinct <- dapc(x_extinct, grp_extinct$grp) # 10, 3
+1# Scatter plot of diversity between three clusters
+scatter(dapc1_extinct, ratio.pca=0.3, bg="white", pch=20,  cell=0,
+        cstar=0, solid=.4, cex=3, clab=0,
+        mstree=TRUE, scree.da=FALSE, posi.pca="bottomright",
+        leg=TRUE, txt.leg=paste("Cluster",1:3))
+# Bar plot to represent the group assignment probability of individuals to several groups
+compoplot(dapc1_extinct, posi="bottomright",legend = FALSE, lab="",
+          ncol=1, xlab="individuals", col=funky(5))
+```
+
+```{r F_stats_extinct}
+# Make a new dataframe to identify population for each individual
+pop_extinct<-data.frame(matrix(nrow = nrow(rhino_extinct), ncol = 12))
+# Rename and store population values into first column based on clusters determined in PCA
+colnames(pop_extinct)[1]<-"pop"
+pop_extinct[1]<-grp_extinct$grp
+# Store rest of genotype data
+pop_extinct[,2:12]<-rhino_extinct
+write.csv(pop_extinct, "~/Desktop/ESPM 108B/pop_extinct.csv")
+
+library(hierfstat)
+rhinostats_extinct<-basic.stats(pop_extinct)
+rhinostats_extinct
+```
+
+```{r format_extant}
+# Load data into variable
+extant_raw<-read.csv("~/Desktop/ESPM 108B/proj/rhino_extant.csv")
+# Rename column names to make it more readable
+colnames(extant_raw)[3]<-'DB1.1'
+colnames(extant_raw)[5]<-'DB23.1'
+colnames(extant_raw)[7]<-'DB44.1'
+colnames(extant_raw)[9]<-'BR4.1'
+colnames(extant_raw)[11]<-'BR6.1'
+colnames(extant_raw)[13]<-'BR17.1'
+colnames(extant_raw)[15]<-'SW35.1'
+colnames(extant_raw)[17]<-'RHI32A.1'
+colnames(extant_raw)[19]<-'DB14.1'
+colnames(extant_raw)[21]<-'B1RH2B.1'
+colnames(extant_raw)[23]<-'B1RH37D.1'
+# Make a dataframe to store genotype data, one column for each locus
+rhino_extant<-data.frame(matrix(nrow = nrow(extant_raw), ncol = 11))
+# Fill dataframe with concatenated alleles
+rhino_extant[1]<-as.numeric(paste(extant_raw$DB1, extant_raw$DB1.1, sep=""))
+rhino_extant[2]<-as.numeric(paste(extant_raw$DB23, extant_raw$DB23.1, sep=""))
+rhino_extant[3]<-as.numeric(paste(extant_raw$DB44, extant_raw$DB44.1, sep=""))
+rhino_extant[4]<-as.numeric(paste(extant_raw$BR4, extant_raw$BR4.1, sep=""))
+rhino_extant[5]<-as.numeric(paste(extant_raw$BR6, extant_raw$BR6.1, sep=""))
+rhino_extant[6]<-as.numeric(paste(extant_raw$BR17, extant_raw$BR17.1, sep=""))
+rhino_extant[7]<-as.numeric(paste(extant_raw$SW35, extant_raw$SW35.1, sep=""))
+rhino_extant[8]<-as.numeric(paste(extant_raw$RHI32A, extant_raw$RHI32A.1, sep=""))
+rhino_extant[9]<-as.numeric(paste(extant_raw$DB14, extant_raw$DB14.1, sep=""))
+rhino_extant[10]<-as.numeric(paste(extant_raw$B1RH2B, extant_raw$B1RH2B.1, sep=""))
+rhino_extant[11]<-as.numeric(paste(extant_raw$B1RH37D, extant_raw$B1RH37D.1, sep=""))
+#Remove rows with all NA's
+rhino_extant<-rhino_extant[rowSums(is.na(rhino_extant)) != ncol(rhino_extant),]
+```
+
+
+```{r PCA_extant}
+# Load library for PCA analysis
+library(adegenet)
+# Converting dataframe to 'genind' data type
+x_extant<-df2genind(rhino_extant, ncode=3, NA.char = NA, ploidy = 2)
+# Quantifies number of PCA components and clusters
+grp_extant<-find.clusters(x_extant, max.n.clust = 20) # 200, 10
+# Plots discriminant analysis eigenvalues, represents diversity between pre-defined groups
+dapc1_extant <- dapc(x_extant, grp_extant$grp) # 10, 3
+1# Scatter plot of diversity between three clusters
+scatter(dapc1_extant, ratio.pca=0.3, bg="white", pch=20,  cell=0,
+        cstar=0, solid=.4, cex=3, clab=0,
+        mstree=TRUE, scree.da=FALSE, posi.pca="bottomright",
+        leg=TRUE, txt.leg=paste("Cluster",1:3))
+# Bar plot to represent the group assignment probability of individuals to several groups
+compoplot(dapc1_extant, posi="bottomright",legend = FALSE, lab="",
+          ncol=1, xlab="individuals", col=funky(5))
+```
+
+```{r F_stats_extant}
+# Make a new dataframe to identify population for each individual
+pop_extant<-data.frame(matrix(nrow = nrow(rhino_extant), ncol = 12))
+# Rename and store population values into first column based on clusters determined in PCA
+colnames(pop_extant)[1]<-"pop"
+pop_extant[1]<-grp_extant$grp
+# Store rest of genotype data
+pop_extant[,2:12]<-rhino_extant
+write.csv(pop_extant, "~/Desktop/ESPM 108B/pop_extant.csv")
+
+library(hierfstat)
+rhinostats_extant<-basic.stats(pop_extant)
+rhinostats_extant
+```
